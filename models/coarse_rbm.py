@@ -1,70 +1,58 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-class CoarseRBM(nn.Module):
+from .spins_rbm import SpinsRBM
+
+class A1_E_RBM(SpinsRBM):
     '''
-    Fine-grained lattice model
+    Coarse-grained lattice model on A1 representation
     '''
-    def __init__(self):
-        super().__init__()
+    def __init__(self, device=torch.device('cpu')):
+        super().__init__(device)
         
-        self.J_A = nn.Parameter(torch.rand(1))
-        self.J_E = nn.Parameter(torch.rand(1))
+        self.J_A = nn.Parameter(torch.randn(1))
+        self.J_E = nn.Parameter(torch.randn(1))
         
         self._coupler_A = torch.Tensor([
             [1, 1, 1, 1], 
             [0, 0, 0, 0], 
             [0, 0, 0, 0]
-        ]).detach()
+        ]).detach().to(device)
+        self.register_buffer('coupler_A', self._coupler_A)
         
         self._coupler_E = torch.Tensor([
             [0, 0, 0, 0], 
             [1, 0, -1, 0], 
             [0, 1, 0, -1]
-        ]).detach()
+        ]).detach().to(device)
+        self.register_buffer('coupler_E', self._coupler_E)
+
+        self.to(device)
         
-    def J(self):
+    def W(self):
         '''
-        Return 2-parameter coupling matrix
+        Coupling matrix
         '''
         return self.J_A * self._coupler_A + self.J_E * self._coupler_E
-        
-    def hamiltonian(self, x, z):
-        '''
-        Returns the Hamiltonian energy of the RBM
-        '''
-        return -F.bilinear(x, z, self.J())
-        
-    def z_given_x(self, x):
-        '''
-        Returns the conditional distribution P(z | x)
-        '''
-        return torch.sigmoid(2 * F.linear(x, self.J()))
-    
-    def x_given_z(self, z):
-        '''
-        Returns the conditional distribution P(x | z)
-        '''
-        return torch.sigmoid(2 * F.linear(z, self.J().t()))
-    
-    def forward(self, x, k=1):
-        '''
-        Returns the distribution over visible spins after k Gibbs sampling steps. 
-        '''
-        for i in range(k):
-            z = self.z_given_x(x.bernoulli() * 2 - 1)
-            x = self.x_given_z(z.bernoulli() * 2 - 1)
-        
-        return x
-    
-    def sample(self, z_0=None, n=1, k=32):
-        '''
-        Samples from the joint distribution via repeated Gibbs sampling
-        '''
-        if z_0 is None:
-            z_0 = torch.randint(0, 2, (n, 4)).float() * 2 - 1
 
-        x_0 = self.x_given_z(z_0)
+class A1_RBM(SpinsRBM):
+    '''
+    Coarse-grained lattice model on A1+E representation
+    '''
+    def __init__(self, device=torch.device('cpu')):
+        super().__init__(device)
+
+        self.J = nn.Parameter(torch.randn(1))
+
+        self._coupler = torch.Tensor([
+            [1, 1, 1, 1]
+        ]).detach().to(device)
+        self.register_buffer('coupler', self._coupler)
         
-        return self.forward(x_0, k=k)
+        self.to(device)
+        
+    def W(self):
+        '''
+        Coupling matrix
+        '''
+        return self.J * self._coupler

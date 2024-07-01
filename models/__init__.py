@@ -1,2 +1,2 @@
-from .coarse_rbm import CoarseRBM
+from .coarse_rbm import *
 from .fine_rbm import FineRBM
