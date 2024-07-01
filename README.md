@@ -1,1 +1,1 @@
-# dlrg
+# DLRG: Deep Learned Renormalization Group
