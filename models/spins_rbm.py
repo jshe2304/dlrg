@@ -4,66 +4,76 @@ import torch.nn.functional as F
 
 class SpinsRBM(nn.Module):
     '''
-    Basic spins RBM
+    Basic up/down spins RBM. 
     '''
 
     def __init__(self, device):
         super().__init__()
-        
         self.device = device
 
     def W(self):
         '''
-        Return the coupling matrix
+        Returns the coupling matrix. 
+        Child RBMs need to override this function. 
         '''
         return
 
     def energy(self, v, h):
         '''
-        Returns the Hamiltonian energy of the RBM
+        Returns the Hamiltonian energy of the RBM. 
         '''
         return -F.bilinear(v, h, self.W().unsqueeze(0))
 
     def free_energy(self, v):
         '''
-        Returns the free energy
+        Returns the free energy. 
         '''
-        exp = torch.exp(F.linear(v, self.W().t()))
-        return -torch.sum(torch.log(1 + exp))
+        arg = F.linear(v, self.W())
 
-    def h_given_v(self, v):
+        return -torch.sum(
+            torch.log(torch.exp(-arg) + torch.exp(arg)), 
+        axis=-1)
+
+    def p_h_given_v(self, v):
         '''
-        Returns the conditional distribution P(h | v). 
+        Returns the conditional distribution p(h | v). 
         v are assumed to be spins, not binary. 
         '''
         return torch.sigmoid(2 * F.linear(v, self.W()))
-    
-    def v_given_h(self, h):
+
+    def p_v_given_h(self, h):
         '''
-        Returns the conditional distribution P(v | h). 
+        Returns the conditional distribution p(v | h). 
         h are assumed to be spins, not binary. 
         '''
         return torch.sigmoid(2 * F.linear(h, self.W().t()))
+        
+    def p_v(self, p_v=None, n=1, k=1):
+        '''
+        Returns the approximate distribution over visible spins via repeated Gibbs sampling. 
+        '''
 
-    def forward(self, v, k=1):
-        '''
-        Returns the distribution over visible spins after k Gibbs sampling steps. 
-        '''
+        # If no p(v_0) provided, sample an initial, fully certain distribution
+        if p_v is None:
+            p_v = torch.randint(0, 2, (n, 4), device=self.device).float()
+
+        # Gibbs sampling
         for i in range(k):
-            h = self.h_given_v(v.bernoulli() * 2 - 1)
-            v = self.v_given_h(h.bernoulli() * 2 - 1)
+            p_h = self.p_h_given_v(p_v.bernoulli() * 2 - 1)
+            p_v = self.p_v_given_h(p_h.bernoulli() * 2 - 1)
         
-        return v
+        return p_v
 
-    def joint(self, h_0=None, n=1, k=32):
+    def plot_samples(self, n=4, k=1):
         '''
-        Approximates the distribution of visible spins via repeated Gibbs sampling
+        Plot some lattices sampled from p(v)
         '''
-        if h_0 is None:
-            h_0 = torch.randint(0, 2, (n, 4)).float() * 2 - 1
-        h_0 = h_0.to(self.device)
 
-        v_0 = self.v_given_h(h_0)
-        
-        return self.forward(v_0, k=k)
-    
+        import matplotlib.pyplot as plt
+        fig, axs = plt.subplots(1, n)
+
+        p_v = self.p_v(n=n, k=k)
+
+        for i in range(n):
+            axs[i].imshow(p_v[i].reshape(2, 2).detach().cpu(), vmin=0, vmax=1)
+            axs[i].axis('off')
