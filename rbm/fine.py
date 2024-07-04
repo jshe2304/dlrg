@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from .spins_rbm import SpinsRBM
+from .spins import SpinsRBM
 
 class FineRBM(SpinsRBM):
     '''

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 class SpinsRBM(nn.Module):
     '''
-    Basic up/down spins RBM. 
+    Basic up/down spins RBM with no biases
     '''
 
     def __init__(self, device):
@@ -75,5 +75,6 @@ class SpinsRBM(nn.Module):
         p_v = self.p_v(n=n, k=k)
 
         for i in range(n):
-            axs[i].imshow(p_v[i].reshape(2, 2).detach().cpu(), vmin=0, vmax=1)
-            axs[i].axis('off')
+            axs[i].imshow(p_v[i].reshape(2, 2).detach().cpu(), vmin=0, vmax=1, cmap='binary')
+            axs[i].set_xticks([])
+            axs[i].set_yticks([])
