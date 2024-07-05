@@ -1,3 +1,7 @@
+'''
+Contains a base RBM model for inheritance by more specific RBMs. 
+'''
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -52,7 +56,6 @@ class SpinsRBM(nn.Module):
         '''
         Returns the approximate distribution over visible spins via repeated Gibbs sampling. 
         '''
-
         # If no p(v_0) provided, sample an initial, fully certain distribution
         if p_v is None:
             p_v = torch.randint(0, 2, (n, 4), device=self.device).float()
@@ -68,7 +71,6 @@ class SpinsRBM(nn.Module):
         '''
         Plot some lattices sampled from p(v)
         '''
-
         import matplotlib.pyplot as plt
         fig, axs = plt.subplots(1, n)
 

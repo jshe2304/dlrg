@@ -23,6 +23,9 @@ def free_energy_mse(fine, coarse, batch_n=1, k=4):
         coarse.free_energy(x_hat)
     )
 
+
+
+
 def free_energy_difference(fine, coarse, batch_n=1, k=4):
     '''
     Mean-difference of free energies
@@ -38,6 +41,10 @@ def free_energy_difference(fine, coarse, batch_n=1, k=4):
 
     # Compute free energy difference
     return torch.mean(coarse.free_energy(x) - coarse.free_energy(x_hat))
+
+
+
+
 
 def marginals_cross_entropy(fine, coarse, batch_n=1, k=4):
     '''
