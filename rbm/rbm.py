@@ -1,38 +1,31 @@
-'''
-Contains a base RBM model for inheritance by more specific RBMs. 
-'''
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class SpinsRBM(nn.Module):
+class RBM(nn.Module):
     '''
-    Basic up/down spins RBM with no biases
+    A base spins RBM model for inheritance by specified RBMs. 
+    No biases are used. 
     '''
 
     def __init__(self, device):
         super().__init__()
+        
         self.device = device
-
-    def W(self):
-        '''
-        Returns the coupling matrix. 
-        Child RBMs need to override this function. 
-        '''
-        return
+        
+        self.to(device)
 
     def energy(self, v, h):
         '''
         Returns the Hamiltonian energy of the RBM. 
         '''
-        return -F.bilinear(v, h, self.W().unsqueeze(0))
+        return -F.bilinear(v, h, self.W.unsqueeze(0))
 
     def free_energy(self, v):
         '''
         Returns the free energy. 
         '''
-        arg = F.linear(v, self.W())
+        arg = F.linear(v, self.W)
 
         return -torch.sum(
             torch.log(torch.exp(-arg) + torch.exp(arg)), 
@@ -43,20 +36,20 @@ class SpinsRBM(nn.Module):
         Returns the conditional distribution p(h | v). 
         v are assumed to be spins, not binary. 
         '''
-        return torch.sigmoid(2 * F.linear(v, self.W()))
+        return torch.sigmoid(2 * F.linear(v, self.W))
 
     def p_v_given_h(self, h):
         '''
         Returns the conditional distribution p(v | h). 
         h are assumed to be spins, not binary. 
         '''
-        return torch.sigmoid(2 * F.linear(h, self.W().t()))
+        return torch.sigmoid(2 * F.linear(h, self.W.t()))
         
     def p_v(self, p_v=None, n=1, k=1):
         '''
         Returns the approximate distribution over visible spins via repeated Gibbs sampling. 
         '''
-        # If no p(v_0) provided, sample an initial, fully certain distribution
+        # If no p(v_0) provided, sample from a uniform Bernoulli distribution
         if p_v is None:
             p_v = torch.randint(0, 2, (n, 4), device=self.device).float()
 

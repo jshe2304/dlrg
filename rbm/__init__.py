@@ -1,10 +1,6 @@
 '''
 This module contains implementations of RBM models
 
-spins.py - a base class implementing several important RBM functions for inheritance 
-coarse.py - several coarse grained RBMs on different representations
-fine.py - a basic square lattice RBM
+rbm.py - a base class implementing several important RBM functions for inheritance 
+lattices.py - several specialized RBMs for lattice representations
 '''
-
-from .coarse import *
-from .fine import *
