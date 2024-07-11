@@ -5,6 +5,8 @@ class ResidualMLP(nn.Module):
 
     def __init__(self, in_channels, device=torch.device('cpu')):
         super().__init__()
+
+        self.device = device
         
         self.in_block = nn.Sequential(
             nn.Linear(in_channels, 4), 
@@ -33,19 +35,3 @@ class ResidualMLP(nn.Module):
         x3 = self.out_block(x2)
         
         return x3
-    
-    @torch.enable_grad()
-    def grad(self, x):
-        '''
-        Returns the derivative with respect to x
-        '''
-        
-        assert (x.dim == 1 or x.size(0) == 1)
-        
-        x.requires_grad_(True)
-        
-        return torch.autograd.grad(
-            self(x), 
-            x, 
-            create_graph=True
-        )[0]
