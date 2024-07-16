@@ -7,24 +7,26 @@ class ResidualMLP(nn.Module):
         super().__init__()
 
         self.device = device
+
+        h = 4
         
         self.in_block = nn.Sequential(
-            nn.Linear(in_channels, 4), 
-            nn.LayerNorm(4), 
+            nn.Linear(in_channels, h), 
+            nn.LayerNorm(h), 
             nn.SiLU(), 
         )
         
         self.res_block = nn.Sequential(
-            nn.Linear(4, 4), 
-            nn.LayerNorm(4), 
+            nn.Linear(h, h), 
+            nn.LayerNorm(h), 
             nn.SiLU(), 
         )
 
         self.out_block = nn.Sequential(
-            nn.Linear(4, 4), 
-            nn.LayerNorm(4), 
+            nn.Linear(h, h), 
+            nn.LayerNorm(h), 
             nn.SiLU(), 
-            nn.Linear(4, 1)
+            nn.Linear(h, 1)
         )
         
         self.to(device)
