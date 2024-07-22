@@ -49,9 +49,11 @@ class RBM(nn.Module):
         '''
         Returns the approximate distribution over visible spins via repeated Gibbs sampling. 
         '''
+        n_vis = self.W.size(1)
+        
         # If no p(v_0) provided, sample from a uniform Bernoulli distribution
         if p_v is None:
-            p_v = torch.randint(0, 2, (n, 4), device=self.device).float()
+            p_v = torch.randint(0, 2, (n, n_vis), device=self.device).float()
 
         # Gibbs sampling
         for i in range(k):
