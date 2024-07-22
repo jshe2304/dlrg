@@ -1,15 +1,17 @@
 import torch
+from torch.func import grad as funcgrad
 
 @torch.enable_grad()
-def grad(f, x, create_graph=True, do_sum=False):
+def batch_grad(f):
     '''
-    Returns the derivative with respect to x
+    Returns the gradient function of f. 
+    Supports batching. 
     '''
-    
-    x.requires_grad_(True)
-    
-    return torch.autograd.grad(
-        f(x).sum() if do_sum else f(x), 
-        x, 
-        create_graph=create_graph
-    )[0]
+    return torch.vmap(funcgrad(f))
+
+@torch.enable_grad()
+def grad(f):
+    '''
+    Returns the gradient function of f. 
+    '''
+    return funcgrad(f)
