@@ -13,6 +13,7 @@ class MLP(nn.Module):
             nn.Linear(in_channels, h), 
             nn.LayerNorm(h), 
             nn.SiLU(), 
+            nn.Dropout(0.5), 
             nn.Linear(h, 1)
         )
         

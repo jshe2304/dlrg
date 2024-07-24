@@ -43,13 +43,3 @@ class HMC():
             return x
 
         return x_0
-
-        
-
-        
-
-
-
-
-
-
