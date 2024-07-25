@@ -35,29 +35,30 @@ k_fine = 64
 k_coarse = 1
 J = torch.rand(1, device=device)
 
-beta = lambda epoch : 4/(1 + exp(-0.01 * (epoch - (epochs / 2))))
+beta = lambda epoch : 64/(1 + exp(-0.01 * (epoch - (epochs / 2))))
 
-# Training 
+# Training
 fname = './experiments/' + lattice + '.csv'
 for model in range(n_models):
     
-    # Monotone
-    C = MLP(
-        in_channels=1, 
+    # Flow
+    flow = MLP(
+        in_dims=1, 
+        out_dims=1, 
         device=device
     )
-    
-    optimizer = torch.optim.Adam(C.parameters())
+
+    optimizer = torch.optim.Adam(flow.parameters())
     
     for epoch in range(epochs):
         optimizer.zero_grad()
     
-        sampler.potential = lambda J : -beta(epoch) * grad(C)(J).squeeze().norm()
+        sampler.potential = lambda J : beta(epoch) * flow(J) ** 2
     
         # RG Flow
         J = torch.clamp(sampler.step(J), min=0).detach()
         fine.J = J
-        coarse.J = J - grad(C)(J)
+        coarse.J = J - flow(J)
     
         # Loss
         loss = free_energy_contrast(
@@ -69,6 +70,6 @@ for model in range(n_models):
         loss.backward()
         optimizer.step()
 
-    crit = find_root(torch.tensor([0.5], device=device), lambda x: grad(C)(x).squeeze())
+    crit = find_root(torch.tensor([0.5], device=device), flow)
     with open(fname, 'a') as f:
         f.write(str(crit) + '\n')
