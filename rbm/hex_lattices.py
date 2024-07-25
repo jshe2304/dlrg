@@ -17,16 +17,6 @@ class Fine_Hex_RBM(RBM):
             requires_grad=False, 
             device=device
         )
-        
-    @property
-    def J(self):
-        return self._J
-    
-    @J.setter
-    def J(self, value):
-        self._J = value
-        self.W = self._J * self.coupler
-
 
 class A1_Hex_RBM(RBM):
     '''
@@ -40,12 +30,3 @@ class A1_Hex_RBM(RBM):
             requires_grad=False, 
             device=device
         )
-        
-    @property
-    def J(self):
-        return self._J
-    
-    @J.setter
-    def J(self, value):
-        self._J = value
-        self.W = self._J * self.coupler

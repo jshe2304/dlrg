@@ -15,6 +15,15 @@ class RBM(nn.Module):
         
         self.to(device)
 
+    @property
+    def J(self):
+        return self._J
+    
+    @J.setter
+    def J(self, value):
+        self._J = value
+        self.W = self._J * self.coupler
+
     def energy(self, v, h):
         '''
         Returns the Hamiltonian energy of the RBM. 

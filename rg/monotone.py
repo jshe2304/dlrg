@@ -8,14 +8,15 @@ class MLP(nn.Module):
 
         self.device = device
 
-        h = 16
+        h = 32
         self.mlp = nn.Sequential(
             nn.Linear(in_dims, h), 
             nn.LayerNorm(h), 
             nn.SiLU(), 
-            #nn.Dropout(0.5), 
             nn.Linear(h, out_dims)
         )
+
+        nn.init.uniform_(self.mlp[0].bias.data, b=2)
 
         self.to(device)
     
