@@ -8,11 +8,11 @@ class RBM(nn.Module):
     No biases are used. 
     '''
 
-    def __init__(self, device):
+    def __init__(self, coupler, device=torch.device('cpu')):
         super().__init__()
-        
-        self.device = device
-        
+
+        self.register_buffer('coupler', coupler)
+
         self.to(device)
 
     @property
@@ -22,7 +22,11 @@ class RBM(nn.Module):
     @J.setter
     def J(self, value):
         self._J = value
-        self.W = self._J * self.coupler
+        self.W = torch.tensordot(self._J, self.coupler, dims=1)
+
+    @property
+    def device(self):
+        return self.coupler.device
 
     def energy(self, v, h):
         '''

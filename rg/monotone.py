@@ -3,17 +3,17 @@ import torch.nn as nn
 
 class MLP(nn.Module):
 
-    def __init__(self, in_dims=1, out_dims=1, device=torch.device('cpu')):
+    def __init__(self, dim=1, device=torch.device('cpu')):
         super().__init__()
 
         self.device = device
 
         h = 32
         self.mlp = nn.Sequential(
-            nn.Linear(in_dims, h), 
+            nn.Linear(dim, h), 
             nn.LayerNorm(h), 
             nn.SiLU(), 
-            nn.Linear(h, out_dims)
+            nn.Linear(h, dim)
         )
 
         nn.init.uniform_(self.mlp[0].bias.data, b=2)
