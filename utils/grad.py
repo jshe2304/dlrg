@@ -1,5 +1,5 @@
 import torch
-from torch.func import grad as funcgrad
+from torch.func import grad as funcgrad, jacfwd as jacobian
 
 @torch.enable_grad()
 def batch_grad(f):

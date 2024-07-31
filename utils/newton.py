@@ -3,17 +3,14 @@ Newton's root-finding algorithm
 '''
 
 import torch
-from .grad import grad
+from .grad import grad, jacobian
 
-def find_root(x, f, eps=1e-7, max_iters=1000):
+@torch.no_grad()
+def find_root(f, x, eps=1e-7, max_iters=1000):
     
     for i in range(max_iters):
+        if torch.norm(fx := f(x)) < eps: break
 
-        fx = f(x)
-        if torch.abs(fx) < eps: break
-        
-        dfdx = grad(f)(x)
-        
-        x = x - (fx / dfdx).detach()
-        
-    return float(x)
+        x = x - jacobian(f)(x).inverse() @ fx
+
+    return x

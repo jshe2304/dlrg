@@ -16,6 +16,7 @@ class HMC():
         '''
         Solve Hamiltonian dynamics over specified runtime
         '''
+
         v -= 0.5 * dt * batch_grad(self.potential)(x)
         x += dt * v
         
@@ -34,10 +35,10 @@ class HMC():
         batch_size, in_dims = x_0.shape
         
         v_0 = torch.randn_like(x_0, device=self.device)
-        H_0 = self.potential(x_0).reshape(batch_size, in_dims) + self.kinetic(v_0)
+        H_0 = self.potential(x_0).reshape(batch_size, 1) + self.kinetic(v_0)
 
         x, v = self.solve(x_0, v_0)
-        H = self.potential(x).reshape(batch_size, in_dims) + self.kinetic(v)
+        H = self.potential(x).reshape(batch_size, 1) + self.kinetic(v)
 
         p_accept = torch.exp(H_0 - H)
 
