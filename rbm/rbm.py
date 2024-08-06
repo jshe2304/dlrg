@@ -7,18 +7,22 @@ class RBM(nn.Module):
     A base spins RBM model for inheritance by specified RBMs. 
     No biases are used. 
 
-    J       : (batches , couplers         )
-    coupler : (couplers, hidden  , visible)
-    W       : (batches , hidden  , visible)
-    p_h, v  : (samples , hidden           )
-    p_v, h  : (samples , visible          )
+    J                : (models  , parameters          )
+    adjacency_matrix : (hidden  , visible             )
+    W                : (models  , hidden     , visible)
+    p_h, v           : (samples , hidden              )
+    p_v, h           : (samples , visible             )
     '''
 
-    def __init__(self, coupler, device=torch.device('cpu')):
+    def __init__(self, adjacency_matrix, coupling_matrix, device=torch.device('cpu')):
         super().__init__()
 
-        self.register_buffer('coupler', coupler)
+        self.register_buffer('adjacency_matrix', adjacency_matrix)
+        self.register_buffer('coupling_matrix', coupling_matrix)
 
+        self.n_parameters, self.n_dimensions, self.n_dimensions = coupling_matrix.shape
+        
+        self.device = device
         self.to(device)
 
     @property
@@ -26,13 +30,22 @@ class RBM(nn.Module):
         return self._J
     
     @J.setter
-    def J(self, value):
-        self._J = value
-        self.W = torch.tensordot(self._J, self.coupler, dims=1)
+    def J(self, J):
+        '''
+        Compute the (dim, dim) matrix from a (models, parameters) vector. 
+        Compute the (models, hidden * dim, visible * dim) weight matrix. 
+        '''
+        
+        self.n_models, _ = J.shape
+        
+        self._J = torch.tensordot(
+            J, self.coupling_matrix, 
+            dims=((1, ), (0, ))
+        ).reshape(self.n_models, self.n_dimensions, self.n_dimensions)
 
-    @property
-    def device(self):
-        return self.coupler.device
+        self.W = torch.kron(self.adjacency_matrix, self._J)
+
+        self.n_models, self.n_hidden, self.n_visible = self.W.shape
 
     def free_energy(self, v):
         '''
@@ -67,16 +80,15 @@ class RBM(nn.Module):
         arg = torch.bmm(h, self.W)
         
         return torch.sigmoid(2 * arg)
-        
+    
     def p_v(self, p_v=None, n=1, k=1):
         '''
         Returns the approximate distribution over visible spins via repeated Gibbs sampling. 
         '''
-        n_models, n_hidden, n_visible = self.W.shape
         
         # If no p(v_0) provided, sample from a uniform Bernoulli distribution
         if p_v is None:
-            p_v = torch.randint(0, 2, (n_models, n, n_visible), device=self.device).float()
+            p_v = torch.randint(0, 2, (self.n_models, n, self.n_visible), device=self.device).float()
 
         # Gibbs sampling
         for i in range(k):

@@ -39,7 +39,7 @@ def plot2d(f, u=None, xlim=(-2.5, 2.5), ylim=(-2.5, 2.5), color_res=12, vector_r
         x, y = torch.meshgrid(
             torch.linspace(*xlim, xsize * color_res), 
             torch.linspace(*ylim, ysize * color_res), 
-            indexing='ij'
+            indexing='xy'
         )
         grid = torch.stack((x, y), dim=2).to(device)
         
@@ -50,7 +50,7 @@ def plot2d(f, u=None, xlim=(-2.5, 2.5), ylim=(-2.5, 2.5), color_res=12, vector_r
         x, y = torch.meshgrid(
             torch.linspace(*xlim, xsize * vector_res), 
             torch.linspace(*ylim, ysize * vector_res), 
-            indexing='ij'
+            indexing='xy'
         )
         grid = torch.stack((x, y), dim=2).to(device)
         
@@ -71,7 +71,7 @@ def vector_field(f, xlim=(-2.5, 2.5), ylim=(-2.5, 2.5), color_res=12, vector_res
     x, y = torch.meshgrid(
         torch.linspace(*xlim, xsize * vector_res), 
         torch.linspace(*ylim, ysize * vector_res), 
-        indexing='ij'
+        indexing='xy'
     )
     grid = torch.stack((x, y), dim=2).to(device)
 

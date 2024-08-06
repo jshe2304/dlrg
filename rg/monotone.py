@@ -1,45 +1,36 @@
 import torch
 import torch.nn as nn
 
-class MLP1(nn.Module):
+class MLP(nn.Module):
 
-    def __init__(self, dim=1, h=32, device=torch.device('cpu')):
+    def __init__(self, in_dim, out_dim, hidden_depth=1, width=32, device=torch.device('cpu')):
         super().__init__()
 
-        self.device = device
-
-        self.mlp = nn.Sequential(
-            nn.Linear(dim, h), 
-            nn.LayerNorm(h), 
+        self.in_block = nn.Sequential(
+            nn.Linear(in_dim, width), 
+            nn.LayerNorm(width), 
             nn.SiLU(), 
-            nn.Linear(h, dim)
         )
 
-        nn.init.uniform_(self.mlp[0].bias.data, a=-2, b=2)
+        self.mlp_block = nn.Sequential(*[
+            nn.Sequential(
+                nn.Linear(width, width), 
+                nn.LayerNorm(width), 
+                nn.SiLU()
+            ) for _ in range(hidden_depth)
+        ])
 
+        self.out_block = nn.Linear(width, out_dim)
+
+        self.device = device
         self.to(device)
     
     def forward(self, x):
-        return self.mlp(x)
 
-class MLP2(nn.Module):
+        #sign = torch.sign(x)
 
-    def __init__(self, dim=1, h=32, device=torch.device('cpu')):
-        super().__init__()
-
-        self.device = device
-
-        self.mlp = nn.Sequential(
-            nn.Linear(dim, h), 
-            nn.LayerNorm(h), 
-            nn.SiLU(), 
-            nn.Linear(h, h), 
-            nn.LayerNorm(h), 
-            nn.SiLU(), 
-            nn.Linear(h, dim)
-        )
+        x1 = self.in_block(x)
+        x2 = self.mlp_block(x1)
+        x3 = self.out_block(x2)
         
-        self.to(device)
-    
-    def forward(self, x):
-        return self.mlp(x)
+        return x3

@@ -1,9 +1,7 @@
 import torch
 import torch.nn as nn
 
-import time
-
-def free_energy_contrast(fine, coarse, batch_size=1, k_fine=4, k_coarse=1):
+def contrastive_divergence(fine, coarse, batch_size=1, k_fine=4, k_coarse=1):
     '''
     Mean-contrast of free energies. 
     Lowers energy of fine-grained samples. 
