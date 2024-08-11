@@ -6,14 +6,28 @@ import torch
 from .grad import grad, jacobian
 
 @torch.no_grad()
-def find_root(f, x, eps=1e-7, max_iters=1000):
+def find_root(f, x, flow_assist=None, eps=1e-7, max_iters=512):
     
     for i in range(max_iters):
-        if torch.norm(fx := f(x)) < eps: break
 
-        J = jacobian(f)(x)
-        if J.det() == 0: return torch.empty_like(x).fill_(float('nan'))
+        # Root Found
+        if torch.norm(fx := f(x)) < eps:
+            return x
+
+        # Newton Step
+
+        J = jacobian(f, randomness='different')(x)
+        if J.det() != 0: 
+            x = x - J.inverse() @ fx
+
+        # Handle singular Jacobian
         
-        x = x - J.inverse() @ fx
+        elif flow_assist is not None:
+            print('assist')
+            x = x - fx * flow_assist
+        
+        else: break
+    
+    return torch.empty_like(x).fill_(float('nan'))
 
-    return x
+    

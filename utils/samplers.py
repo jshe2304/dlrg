@@ -17,17 +17,21 @@ class HMC():
         Solve Hamiltonian dynamics over specified runtime
         '''
 
-        v -= 0.5 * dt * batch_grad(self.potential)(x)
+        #force = grad(lambda _x : self.potential(_x).sum())
+        force = batch_grad(self.potential)
+
+        v -= 0.5 * dt * force(x)
         x += dt * v
         
         for t in range(runtime):
-            v -= dt * batch_grad(self.potential)(x)
+            v -= dt * force(x)
             x += dt * v
     
-        v -= 0.5 * dt * batch_grad(self.potential)(x)
+        v -= 0.5 * dt * force(x)
         
         return x, v
 
+    @torch.no_grad
     def step(self, x_0):
         '''
         MCMC proposal step
@@ -45,8 +49,3 @@ class HMC():
         mask = p_accept > torch.rand_like(p_accept, device=self.device)
 
         return torch.where(mask, x, x_0)
-        
-        if torch.all(p_accept > torch.rand_like(p_accept, device=self.device)):
-            return x
-
-        return x_0

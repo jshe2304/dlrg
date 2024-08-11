@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .configurations import get_configurations
+
 class RBM(nn.Module):
     '''
     A base spins RBM model for inheritance by specified RBMs. 
@@ -10,8 +12,8 @@ class RBM(nn.Module):
     J                : (models  , parameters          )
     adjacency_matrix : (hidden  , visible             )
     W                : (models  , hidden     , visible)
-    p_h, v           : (samples , hidden              )
-    p_v, h           : (samples , visible             )
+    p_h, v           : (models  , samples    , hidden )
+    p_v, h           : (models  , samples    , visible)
     '''
 
     def __init__(self, adjacency_matrix, coupling_matrix, device=torch.device('cpu')):
@@ -47,17 +49,78 @@ class RBM(nn.Module):
 
         self.n_models, self.n_hidden, self.n_visible = self.W.shape
 
+    def energy(self, v, h):
+        '''
+        Returns the Hamiltonian energy
+        '''
+        _, n_cd_samples, _ = v.shape
+
+        W_v = torch.bmm(
+            self.W, 
+            v.permute(0, 2, 1)
+        ).view(self.n_models, n_cd_samples, self.n_hidden, 1)
+
+        h_W_v = torch.matmul(
+            h.view(self.n_models, n_cd_samples, 1, self.n_hidden), 
+            W_v
+        ).view(self.n_models, n_cd_samples, 1)
+
+        return h_W_v
+
     def free_energy(self, v):
         '''
         Returns the free energy. 
         '''
-        
-        # v @ self.W.t()
-        arg = torch.bmm(v, self.W.permute(0, 2, 1))
+
+        if v.dim() == 2:
+            W_v = torch.tensordot(
+                self.W, 
+                v.unsqueeze(-1), 
+                dims=((2, ), (1, ))
+            ).squeeze(-1).permute(0, 2, 1)
+
+        elif v.dim() == 3:
+            W_v = torch.bmm(v, self.W.permute(0, 2, 1))
 
         return -torch.sum(
-            torch.log(torch.exp(-arg) + torch.exp(arg)), 
+            torch.log(torch.exp(-W_v) + torch.exp(W_v)), 
         axis=-1)
+
+    @property
+    def Z(self):
+        '''
+        Computes the partition function in parallel. 
+        Only implemented for A1 representation with C4v symmetry. 
+        '''
+
+        # Get Ising state configurations
+
+        visible_configurations = get_configurations(self.n_visible, self.device)
+        hidden_configurations = get_configurations(self.n_hidden, self.device)
+
+        # Construct Cartesian product of visible and hidden states
+        
+        visibles = visible_configurations.repeat(hidden_configurations.size(0), 1)
+        hiddens = hidden_configurations.repeat_interleave(visible_configurations.size(0), dim=0)
+
+        n_configs = visibles.size(0)
+
+        # Compute the bilinear form for the energies
+        
+        W_v = torch.tensordot(
+            self.W, 
+            visibles.reshape(n_configs, self.n_visible, 1), 
+            dims=((2, ), (1, ))
+        )
+        
+        h_W_v = torch.matmul(
+            hiddens.reshape(n_configs, 1, self.n_hidden), 
+            W_v.permute(0, 2, 1, 3), 
+        )
+
+        # Exponentiate, sum over configurations, and return
+
+        return torch.exp(-h_W_v).sum(dim=1)
 
     def p_h_given_v(self, v):
         '''
