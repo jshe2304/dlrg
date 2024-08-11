@@ -66,11 +66,11 @@ hyperparameter_values = {
     'nn_depth' : [n_couplers], 
     'nn_width' : [16 * n_couplers], 
     
-    'n_models' : torch.arange(1, 64, 4) * (3 ** n_couplers), 
+    'n_models' : torch.arange(1, 64), 
     
-    'n_cd_samples' : torch.arange(4, 1024, 32), 
-    'k_fine' : torch.arange(4, 128, 4), 
-    'k_coarse' : torch.arange(1, 32, 2), 
+    'n_cd_samples' : torch.arange(1, 512, 4), 
+    'k_fine' : torch.arange(1, 32), 
+    'k_coarse' : torch.arange(1, 32), 
 }
 
 beta = lambda epoch : 16/(1 + exp( -16 * (epoch - anneal_at) / epochs ))
@@ -131,7 +131,7 @@ for val in hyperparameter_values[param]:
 
 # Save data
 
-path = f'data/{param}/'
+path = f'data/hyperparameter_tuning_1/{param}/'
 
 torch.save(torch.stack(runs), path + 'roots.pt')
-torch.save(values, path + 'values.pt')
+torch.save(hyperparameter_values[param], path + 'values.pt')
