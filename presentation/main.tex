@@ -1,0 +1,502 @@
+\documentclass[aspectratio=169, 12pt]{beamer}
+\usetheme{CambridgeUS}
+\usecolortheme{beaver}
+
+\usepackage{graphicx}
+\usepackage[style=apa]{biblatex}
+
+\addbibresource{references.bib}
+
+\title{Learning Renormalization Group Flows}
+
+\author[Jay Shen]{ 
+    Jay Shen
+    \and
+    Prof. Ying-Jer Kao
+}
+
+\date[August 16, 2024] {
+    UCTS Final Presentation. August 16, 2024
+}
+
+%
+%
+%
+
+\AtBeginSection[]
+{
+  \begin{frame}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+%
+%
+%
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}
+
+    \frametitle{Abstract}
+
+    Renormalization is a powerful tool in field theory and statistical physics for systematically linking the physics of different scales. 
+
+    \vspace{1em}
+
+    Here, we discuss renormalization and a novel machine learning algorithm developed by Hou et al.\footcite{mlrg} for learning renormalization group flows. 
+    
+\end{frame}
+
+\begin{frame}
+    \frametitle{Table of Contents}
+    \tableofcontents
+\end{frame}
+
+\section{What is Renormalization?}
+
+\begin{frame}
+    \frametitle{At a high level...}
+
+    Renormalization is a theory of theories. 
+
+    \begin{alertblock}{Guiding Question}
+        How does our model for a system change as we consider it from different \textbf{length scales}?
+    \end{alertblock}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example}
+
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+        Say we want to simulate a cubic millimeter of water. 
+        What does this system look like?
+    
+        \begin{itemize}
+            \item ~$10^{19}$ water molecules
+            \item $3$ atoms in each molecule
+            \item A bunch of fundamental particles in each atom
+        \end{itemize}
+    
+        What are the models we have to understand such a system?
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[scale=0.15]{images/water-droplet.jpg}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example: Smallest Scale Model}
+
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+        At the particle scale, field theories:
+
+        \begin{itemize}
+            \item Incredibly complex model with many variables and parameters to keep track of
+            \item Practically intractable integrals to compute
+            \item Completely infeasible to simulate even a drop of water
+        \end{itemize}
+        
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=\textwidth]{images/feynman-diagram.jpg}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example: Smaller Scale Model}
+
+    \begin{columns}
+        
+    \begin{column}{.6\textwidth}
+        At the subatomic scale, quantum dynamics:
+
+        \begin{itemize}
+            \item Complex model with fewer, but still many variables and  parameters
+            \item Difficult integrals to compute
+            \item Simulation is possible, but still intractable in general
+        \end{itemize}
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=\textwidth]{images/hydrogen-atom.jpg}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example: Small Scale Model}
+
+    \begin{columns}
+        
+    \begin{column}{.6\textwidth}
+        At the atomic scale, classical dynamics:
+
+        \begin{itemize}
+            \item Intuitive model with only a couple of degrees of freedom and parameters per molecule
+            \item Integrals are easy
+            \item Simulation is expensive, but doable for up to decently large systems
+        \end{itemize}
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=\textwidth]{images/molecular-dynamics.jpg}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example: Large Scale Model}
+
+    \begin{columns}
+        
+    \begin{column}{.6\textwidth}
+        At the human scale, fluid dynamics:
+
+        \begin{itemize}
+            \item Modeled by a single PDE with a few constants (viscosity, temperature, pressure, ...) that fully specify the system
+            \item Integration done efficiently using numerical solvers
+            \item Simulation practical and accurate up to very large volumes
+        \end{itemize}
+
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=\textwidth]{images/fluid-dynamics.jpg}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Renormalization is a Theory of Scaling}
+
+    \begin{columns}
+        
+    \begin{column}{.6\textwidth}
+
+        Renormalization is a theory of how these models, all at different scales, can be linked in a highly systematic way. 
+
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=\textwidth]{images/theory-flow.png}
+    \end{column}
+    \end{columns}
+    
+\end{frame}
+
+\begin{frame}
+    \frametitle{A Bit of Mathematical Context}
+    
+    What does renormalization look like mathematically?
+
+    \vspace{1em}
+    
+    Consider a system with some degrees of freedom $x_0, x_1, \dots$ \footnote{these may be positions, momenta, etc.} modeled by, say, a Hamiltonian:
+    
+    \[H = f(x_0, x_1, \dots, c_0, c_1, \dots)\]
+    
+    Here, $f$ is some specific function and $c_0, c_1, \dots$ \footnote{these may be temperatures, pressures, fundamental constants, etc.} are some constant parameters also incorporated into $f$. 
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Bit of Mathematical Context}
+
+    When we "zoom out" to a larger length scale, we typically apply some approximation, resulting in new degrees of freedom $x_0', x_1', \dots$. 
+
+    \vspace{1em}
+
+    Now, in certain cases, we can make the \textbf{strong} assumption that this "zoomed out" system can be modeled by the same Hamiltonian form, just with different parameters $c_0', c_1', \dots$:
+
+    \[H = f(x_0', x_1', \dots, c_0', c_1', \dots)\]
+
+    This adjusting of the model for the new "zoomed out" system is what is called \textbf{renormalization}. 
+    
+\end{frame}
+
+\section{The Renormalization Group Flow}
+
+\begin{frame}
+
+    \frametitle{"Zooming Out" As a Flow}
+
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+        Imagine repeating the renormalization process again and again, each repetition giving new degrees of freedom and new renormalized parameters for our increasingly "zoomed out" model. 
+
+        \vspace{1em}
+        
+        The changing parameters will form a path in the high-dimensional space of parameters. 
+        
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=0.9\textwidth]{images/discrete-steps.png}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{"Zooming Out" As a Flow}
+
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+    
+        We can let these "steps" define vectors that point to the next set of parameters...
+        
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=0.9\textwidth]{images/vector-steps.png}
+    \end{column}
+    \end{columns}
+    
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{"Zooming Out" As a Flow}
+
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+    
+        Then if we solve for these vectors continuously over the whole space, we get a vector field. 
+
+        \vspace{1em}
+
+        This is the renormalization group (RG) flow of the parameters. 
+
+        \vspace{1em}
+
+        But why is this important?
+        
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=0.9\textwidth]{images/vector-field.png}
+    \end{column}
+    \end{columns}
+    
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example of Phase in RG Flows}
+
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+    
+        Let's go back to our toy example of a box of water. 
+
+        \vspace{1em}
+
+        Say our two initial parameters are temperature and pressure. 
+
+        \vspace{1em}
+
+        Let us consider two systems, one below freezing and one above. 
+        The initial parameters in parameter space look something like:
+        
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=0.9\textwidth]{images/labeled-fixed-points.png}
+    \end{column}
+    \end{columns}
+    
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example of Phase in RG Flows}
+
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+    
+        Applying a renormalization procedure and following the RG flow, our parameters end up in two fixed points. 
+
+        \vspace{1em}
+
+        Physically, these will correspond to two phases of matter, ice and water. 
+        
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=0.9\textwidth]{images/labeled-flowed-fixed-points.png}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{RG Flow and Phase Behavior}
+
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+    
+        In general, fixed points and other attracting manifolds correspond to distinct phases of the physical system. 
+
+        \vspace{1em}
+
+        As a result, characterizing the RG flow provides enormous insight into critical behaviors, enabling, for example, the construction of phase diagrams. 
+        
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=0.9\textwidth]{images/water-phase.png}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\section{Why use Machine Learning?}
+
+\begin{frame}
+
+    \frametitle{Renormalization is \textbf{Hard}}
+
+    Renormalization promises systematic understanding of phase and its relation to scale and universality. 
+
+    \vspace{1em}
+
+    Unfortunately, this comes at a cost. 
+
+    \vspace{1em}
+    
+    Traditionally, renormalization requires human physicists to:
+
+    \begin{itemize}
+        \item use their own intuition to design an approximation scheme for "zooming out"
+        \item solve the corresponding theories to determine parameter flow
+        \item determine critical behaviors from the formulated flow
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{How Can Machine Learning Help?}
+
+    Statistical physics and machine learning are two historically intertwined disciplines. 
+
+    Renormalization and machine learning, in particular, have a lot in common \footcite{mlrg}:
+
+    \begin{itemize}
+        \item both are ways of distilling essential information and correlations from complex systems
+        \item both are resistant to statistical noise, whether it be minibatches or microstates
+        \item both map high dimension information to lower dimension representations
+        \item both use similar mathematical frameworks of generative models
+    \end{itemize}
+
+    Ultimately, these similarities can be leverage to automate renormalization and the study of complex physical systems. 
+
+\end{frame}
+
+\section{The Ising Model Problem}
+
+\begin{frame}
+    \frametitle{The Ising Model}
+
+    \begin{columns}
+        \begin{column}{.6\textwidth}
+            
+            The Ising Model is a historically important problem in statistical physics. 
+
+            \begin{itemize}
+                \item originally developed as a model of ferromagnetism, thought it has since been applied to a wide range of problems. 
+                \item one of the first probabilistic graphical models, the precursors to modern neural networks. 
+                \item analytical solutions exists, providing good behavioral benchmarks. 
+            \end{itemize}
+            
+        \end{column}
+        \begin{column}{.4\textwidth}
+            \includegraphics[width=\textwidth]{images/ising-spins.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{The Ising Model, Conceptually}
+
+    \begin{columns}
+        \begin{column}{.6\textwidth}
+            
+            Conceptually, the Ising model is fairly simple:
+            \begin{itemize}
+                \item Atoms are arranged on some lattice
+                \item Atomic spins are either up or down, and are correlated with the spins of neighboring atoms
+            \end{itemize}
+            
+        \end{column}
+        \begin{column}{.4\textwidth}
+            \includegraphics[width=\textwidth]{images/ising-spins-grid.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{The Ising Model Hamiltonian}
+
+    This principle of localized correlations can be modeled by a Hamiltonian, or total energy function. 
+
+    \vspace{1em}
+
+    Let $\sigma_0, \sigma_1, \dots \in \{-1, 1\}$ be the values of the atomic spins. 
+
+    Then the Hamiltonian\footnote{here we assume net zero magnetic field and constant correlation strength} is:
+
+    \[
+    H = \sum_{i \leftrightarrow j} J \sigma_i \sigma_j
+    \]
+
+    $i \leftrightarrow j$ signifies that the $i$th and $j$th spins are adjacent on the lattice. 
+    
+    $J$ is the correlation strength. 
+
+\end{frame}
+    
+\begin{frame}
+
+    \frametitle{Renormalizing the Ising Model}
+
+    Say we want to "zoom out" by applying a Kadanoff blocking approximation, mapping a square block of spins to a single spin. 
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{images/ising-blocking.png}
+    \end{center}
+    
+\end{frame}
+
+\begin{frame}
+    \frametitle{Renormalizing the Ising Model}
+
+    This approximate lattice is also an Ising model, and can be modeled using the same Hamiltonian form:
+
+    \[
+    H' = \sum_{i' \leftrightarrow j'} J' \sigma_{i'} \sigma_{j'}
+    \]
+
+    Here, $J'$ is the adjusted, or renormalized, correlation strength. 
+
+    \begin{alertblock}{Note}
+        Here, we observe the Ising model's \textbf{scale invariance}, a key prerequisite for renormalization. 
+    \end{alertblock}
+     
+\end{frame}
+
+\section{A Machine Learning Algorithm for Ising Model Renormalization}
+
+\section{Results and Conclusions}
+
+\end{document}
