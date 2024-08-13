@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+import os
 import sys
 from math import exp
 
@@ -123,7 +124,6 @@ for val in hyperparameter_values[param]:
 
         if epoch >= record_at:
             x = torch.tensor([0.8], device=device)
-            #x = torch.tensor([0.8, 0., 0., 0.8, 0.8], device=device)
             roots.append(find_root(flow, x))
 
     roots = torch.stack(roots).reshape(epochs - record_at)
@@ -131,7 +131,9 @@ for val in hyperparameter_values[param]:
 
 # Save data
 
-path = f'data/hyperparameter_tuning_1/{param}/'
+path = os.path.join('./data/hyperparameter_tuning_1', param)
 
-torch.save(torch.stack(runs), path + 'roots.pt')
-torch.save(hyperparameter_values[param], path + 'values.pt')
+if not os.path.exists(path): os.makedirs(path)
+
+torch.save(torch.stack(runs), os.path.join(path, 'roots.pt'))
+torch.save(hyperparameter_values[param], os.path.join(path, 'values.pt'))
