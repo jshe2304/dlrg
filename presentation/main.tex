@@ -3,7 +3,7 @@
 \usecolortheme{beaver}
 
 \usepackage{graphicx}
-\usepackage[style=apa]{biblatex}
+\usepackage[style=authoryear]{biblatex}
 
 \addbibresource{references.bib}
 
@@ -394,10 +394,10 @@
     Renormalization and machine learning, in particular, have a lot in common \footcite{mlrg}:
 
     \begin{itemize}
-        \item both are ways of distilling essential information and correlations from complex systems
-        \item both are resistant to statistical noise, whether it be minibatches or microstates
-        \item both map high dimension information to lower dimension representations
-        \item both use similar mathematical frameworks of generative models
+        \item Both are ways of distilling essential information and correlations from complex systems. 
+        \item Both are resistant to statistical noise, whether it be minibatches or microstates. 
+        \item Both map high dimension information to lower dimension representations. 
+        \item Both use similar mathematical frameworks of generative models. 
     \end{itemize}
 
     Ultimately, these similarities can be leverage to automate renormalization and the study of complex physical systems. 
@@ -415,9 +415,9 @@
             The Ising Model is a historically important problem in statistical physics. 
 
             \begin{itemize}
-                \item originally developed as a model of ferromagnetism, thought it has since been applied to a wide range of problems. 
-                \item one of the first probabilistic graphical models, the precursors to modern neural networks. 
-                \item analytical solutions exists, providing good behavioral benchmarks. 
+                \item Originally developed as a model of ferromagnetism, thought it has since been applied to a wide range of problems. 
+                \item One of the first probabilistic graphical models, the precursors to modern neural networks. 
+                \item Analytical solutions exists, providing good behavioral benchmarks. 
             \end{itemize}
             
         \end{column}
@@ -490,13 +490,167 @@
     Here, $J'$ is the adjusted, or renormalized, correlation strength. 
 
     \begin{alertblock}{Note}
-        Here, we observe the Ising model's \textbf{scale invariance}, a key prerequisite for renormalization. 
+        We are able to do this because the Ising model is a \textbf{scale invariant} theory. 
+        Scale invariance is one of the prerequisites for renormalizability. 
     \end{alertblock}
      
 \end{frame}
 
 \section{A Machine Learning Algorithm for Ising Model Renormalization}
 
+\begin{frame}{The MLRG Algorithm}
+
+    In Hou et al.\footcite{mlrg}, the authors propose an learning algorithm that promises:
+    \begin{itemize}
+        \item Fast, automated description of RG flow on Ising models
+        \item Accessible analysis of phase behavior via numerical methods
+        \item Applicability to a wide variety of systems
+    \end{itemize}
+
+    Let's break down the algorithm step by step. 
+    
+\end{frame}
+
+\begin{frame}{Learning Objective}
+
+    Ideally, we would like to learn a representation of the RG flow. 
+
+    \vspace{1em}
+
+    Hou et al. propose to learn the C-theorem\footcite{c-theorem} monotone function. 
+
+    \vspace{1em}
+
+    Here, we will directly model the RG flow vector field, which is a function:
+    
+    \[
+    \vec{f}(J) : \mathbb{R}^n \rightarrow \mathbb{R}^n
+    \]
+
+    Here, $n$ is the number of parameters in the theory. 
+    For the Ising model, $n=1$. 
+    
+\end{frame}
+
+\begin{frame}{Learning Model}
+
+
+    \begin{columns}
+        \begin{column}{.6\textwidth}
+            
+            To model $f$, we will use a neural network, which are known to be powerful function approximators. 
+
+            We will call our neural network:
+
+            \[
+            \vec{f}_\theta(J) : \mathbb{R}^n \rightarrow \mathbb{R}^n
+            \]
+            
+        \end{column}
+        \begin{column}{.4\textwidth}
+            \includegraphics[width=\textwidth]{images/ising-spins-grid.png}
+        \end{column}
+    \end{columns}
+    
+\end{frame}
+
+\begin{frame}{Deep Learning Procedure}
+
+    To adjust $\vec{f}_\theta$ so that it bests resembles $\vec{f}$, we will follow a typical supervised learning procedure:
+    \begin{enumerate}
+        \item \textbf{Sample} values of $J$. 
+        \item \textbf{Forward Pass} to evaluate $\vec{f}_\theta(J)$. 
+        \item \textbf{Compute Error} to estimate difference between $\vec{f}_\theta(J)$ and $\vec{f}(J)$. 
+        \item \textbf{Backward Pass} to adjust $\vec{f}_\theta$ according to that error. 
+    \end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Sample Step}
+
+    \begin{columns}
+        \begin{column}{.6\textwidth}
+            
+            In general, the accuracy of neural networks improves around inputs that are sampled more. 
+
+            \vspace{1em}
+
+            To this end, we want to sample heavily from around values of $J$ close to interesting critical and fixed points, where flow is minimal. 
+
+            \vspace{1em}
+
+            This is best accomplished using an annealed Hamiltonian Monte Carlo sampler to minimize $|| \vec{f}_\theta(J) ||$. 
+            
+        \end{column}
+        \begin{column}{.4\textwidth}
+            \includegraphics[width=\textwidth]{presentation/images/flow-heat.png}
+        \end{column}
+    \end{columns}
+    
+\end{frame}
+
+\begin{frame}{Forward Pass Step}
+
+    Given our initial parameters $J$ for a system, the value $\vec{f}_\theta(J)$ represents the direction the parameters will move upon renormalization. 
+
+    \vspace{1em}
+
+    Accordingly, $J' = J + \vec{f}_\theta(J)$ represents the renormalized parameters modelling the "zoomed out" system. 
+
+\end{frame}
+
+\begin{frame}{Compute Error Step}
+
+    How can we judge whether $\vec{f}_\theta$ is sending our parameters in the right direction?
+
+    \vspace{1em}
+
+    Ideally, the RG flow moves the parameters such that the new, renormalized system's behavior best matches that of the original. 
+
+    \vspace{1em}
+
+    The behavior of Ising models is defined by the probabilistic distribution of the atomic spins, which is given by a Gibbs distribution:
+
+    \[
+    P(\sigma_0, \sigma_1, \dots, J) = \frac{1}{Z} e^{-H(\sigma_0, \sigma_1, \dots, J)}
+    \]
+
+\end{frame}
+
+\begin{frame}{Compute Error Step}
+
+    Given values of $J$ and $J' = J + \vec{f}_\theta(J)$, the behavior of the original and renormalized system are modeled by:
+
+    \[
+    P(\sigma_0, \sigma_1, \dots, J) 
+    \quad \text{and} \quad
+    P(\sigma_0', \sigma_1', \dots, J') 
+    \]
+
+    We can then use the Kullback-Liebler divergence ($D_{KL}$)\footnote{in practice we use the contrastive divergence, which is an approximation} to measure the difference between these two distributions, defining our error:
+
+    \[
+    Error = D_{KL} \Biggr (
+    P(\sigma_0, \sigma_1, \dots, J)
+    \: , \: 
+    P(\sigma_0', \sigma_1', \dots, J') 
+    \Biggr)
+    \]
+
+\end{frame}
+
+\begin{frame}{Backward Pass Step}
+
+    Now that we have an error value, we use the backpropagation algorithm to adjust $\vec{f}_\theta$ so that in the future, it does better on similar training examples. 
+
+    \[
+    \Delta \theta = \frac{\partial Error}{\partial \theta}
+    \]
+    
+\end{frame}
+
 \section{Results and Conclusions}
+
+
 
 \end{document}
