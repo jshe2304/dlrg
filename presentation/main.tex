@@ -38,17 +38,18 @@
 
 \frame{\titlepage}
 
-\begin{frame}
 
-    \frametitle{Abstract}
+%\begin{frame}
+%
+%    \frametitle{Abstract}
+%
+%    Renormalization is a powerful tool in field theory and statistical physics for systematically linking the physics of different scales. 
 
-    Renormalization is a powerful tool in field theory and statistical physics for systematically linking the physics of different scales. 
+%    \vspace{1em}
 
-    \vspace{1em}
-
-    Here, we discuss renormalization and a novel machine learning algorithm developed by Hou et al.\footcite{mlrg} for learning renormalization group flows. 
+%    Here, we discuss renormalization and a novel machine learning algorithm developed by Hou et al.\footcite{mlrg} for learning renormalization group flows. 
     
-\end{frame}
+%\end{frame}
 
 \begin{frame}
     \frametitle{Table of Contents}
@@ -458,7 +459,7 @@
     Then the Hamiltonian\footnote{here we assume net zero magnetic field and constant correlation strength} is:
 
     \[
-    H = \sum_{i \leftrightarrow j} J \sigma_i \sigma_j
+    H = -\sum_{i \leftrightarrow j} J \sigma_i \sigma_j
     \]
 
     $i \leftrightarrow j$ signifies that the $i$th and $j$th spins are adjacent on the lattice. 
@@ -484,7 +485,7 @@
     This approximate lattice is also an Ising model, and can be modeled using the same Hamiltonian form:
 
     \[
-    H' = \sum_{i' \leftrightarrow j'} J' \sigma_{i'} \sigma_{j'}
+    H' = -\sum_{i' \leftrightarrow j'} J' \sigma_{i'} \sigma_{j'}
     \]
 
     Here, $J'$ is the adjusted, or renormalized, correlation strength. 
@@ -560,13 +561,13 @@
     \begin{enumerate}
         \item \textbf{Sample} values of $J$. 
         \item \textbf{Forward Pass} to evaluate $\vec{f}_\theta(J)$. 
-        \item \textbf{Compute Error} to estimate difference between $\vec{f}_\theta(J)$ and $\vec{f}(J)$. 
+        \item \textbf{Compute Error} between $\vec{f}_\theta(J)$ and $\vec{f}(J)$. 
         \item \textbf{Backward Pass} to adjust $\vec{f}_\theta$ according to that error. 
     \end{enumerate}
 
 \end{frame}
 
-\begin{frame}{Sample Step}
+\begin{frame}{Sampling}
 
     \begin{columns}
         \begin{column}{.6\textwidth}
@@ -589,7 +590,7 @@
     
 \end{frame}
 
-\begin{frame}{Forward Pass Step}
+\begin{frame}{Forward Pass}
 
     Given our initial parameters $J$ for a system, the value $\vec{f}_\theta(J)$ represents the direction the parameters will move upon renormalization. 
 
@@ -599,7 +600,7 @@
 
 \end{frame}
 
-\begin{frame}{Compute Error Step}
+\begin{frame}{Compute Error}
 
     How can we judge whether $\vec{f}_\theta$ is sending our parameters in the right direction?
 
@@ -617,17 +618,17 @@
 
 \end{frame}
 
-\begin{frame}{Compute Error Step}
+\begin{frame}{Compute Error}
 
     Given values of $J$ and $J' = J + \vec{f}_\theta(J)$, the behavior of the original and renormalized system are modeled by:
 
     \[
     P(\sigma_0, \sigma_1, \dots, J) 
-    \quad \text{and} \quad
+    \qquad \qquad \text{and} \qquad \qquad
     P(\sigma_0', \sigma_1', \dots, J') 
     \]
 
-    We can then use the Kullback-Liebler divergence ($D_{KL}$)\footnote{in practice we use the contrastive divergence, which is an approximation} to measure the difference between these two distributions, defining our error:
+    We can then use the Kullback-Liebler divergence ($D_{KL}$) to measure the difference between these two distributions, defining our error:
 
     \[
     Error = D_{KL} \Biggr (
@@ -639,9 +640,9 @@
 
 \end{frame}
 
-\begin{frame}{Backward Pass Step}
+\begin{frame}{Backward Pass}
 
-    Now that we have an error value, we use the backpropagation algorithm to adjust $\vec{f}_\theta$ so that in the future, it does better on similar training examples. 
+    Now that we have an error value, we can use the backpropagation algorithm to adjust $\vec{f}_\theta$ so that it does better in the future. 
 
     \[
     \Delta \theta = \frac{\partial Error}{\partial \theta}
@@ -649,8 +650,55 @@
     
 \end{frame}
 
-\section{Results and Conclusions}
+\section{Results}
 
+\begin{frame}{Learned RG Flow}
 
+    
+    Following this procedure, we train a neural network $f_\theta : \mathbb{R} \rightarrow \mathbb{R}$. 
+
+    Upon convergence, $f_\theta$ looks like:
+
+    \begin{center}
+        \includegraphics[width=0.75\textwidth]{
+            presentation/images/a1_flows.png
+        }
+    \end{center}
+    
+\end{frame}
+
+\begin{frame}{Critical Point Estimates}
+
+    
+    Given the learned $f_\theta$ function, we use Newton's method to solve for fixed and critical points where $||f_\theta|| \rightarrow 0$
+    
+    \vspace{1em}
+
+    The values we get vary, due to the stocasticity of the algorithm, so we plot their distribution by sampling many runs:
+
+    \vspace{1em}
+
+    \begin{center}
+        \includegraphics[width=0.75\textwidth]{
+            presentation/images/a1_critical_points_boxplot.png
+        }
+    \end{center}
+    
+\end{frame}
+
+\begin{frame}{A Problem of Bias}
+
+    Evidently, our estimates are biased from the analytically derived results. 
+    Why? 
+
+    \vspace{1em}
+
+    Hou et al. conjecture it is due to the simplicity of our treatment of the Ising model. 
+
+    \vspace{1em}
+    
+    To ameliorate this, we can "decorate" the Ising model with additional spins that mediate different correlation strengths. 
+    
+\end{frame}
 
 \end{document}
