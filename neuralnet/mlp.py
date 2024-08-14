@@ -8,14 +8,14 @@ class MLP(nn.Module):
 
         self.in_block = nn.Sequential(
             nn.Linear(in_dim, width), 
-            nn.LayerNorm(width), 
+            #nn.LayerNorm(width), 
             nn.ReLU(), 
         )
 
         self.mlp_block = nn.Sequential(*[
             nn.Sequential(
                 nn.Linear(width, width), 
-                nn.LayerNorm(width), 
+                #nn.LayerNorm(width), 
                 nn.ReLU()
             ) for _ in range(hidden_depth)
         ])
