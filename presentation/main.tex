@@ -10,9 +10,17 @@
 \title{Learning Renormalization Group Flows}
 
 \author[Jay Shen]{ 
-    Jay Shen
+    Jay Shen\inst{1}
     \and
-    Prof. Ying-Jer Kao
+    Prof. Ying-Jer Kao\inst{2}
+}
+
+\institute{
+  \inst{1}
+  University of Chicago
+  \and
+  \inst{2}
+  National Taiwan University
 }
 
 \date[August 16, 2024] {
@@ -210,7 +218,7 @@
     
     \[H = f(x_0, x_1, \dots, c_0, c_1, \dots)\]
     
-    Here, $f$ is some specific function and $c_0, c_1, \dots$ \footnote{these may be temperatures, pressures, fundamental constants, etc.} are some constant parameters also incorporated into $f$. 
+    Here, $f$ is some specific function and $c_0, c_1, \dots$ \footnote{these may be masses, fundamental constants, etc.} are some constant parameters also incorporated into $f$. 
 
 \end{frame}
 
@@ -390,9 +398,7 @@
 
     \frametitle{How Can Machine Learning Help?}
 
-    Statistical physics and machine learning are two historically intertwined disciplines. 
-
-    Renormalization and machine learning, in particular, have a lot in common \footcite{mlrg}:
+    Renormalization and machine learning have a lot in common \footcite{mlrg}:
 
     \begin{itemize}
         \item Both are ways of distilling essential information and correlations from complex systems. 
@@ -472,7 +478,7 @@
 
     \frametitle{Renormalizing the Ising Model}
 
-    Say we want to "zoom out" by applying a Kadanoff blocking approximation, mapping a square block of spins to a single spin. 
+    Say we want to "zoom out" by applying a blocking approximation, mapping a square block of spins to a single spin. 
     \begin{center}
         \includegraphics[width=0.9\textwidth]{images/ising-blocking.png}
     \end{center}
@@ -508,28 +514,28 @@
         \item Applicability to a wide variety of systems
     \end{itemize}
 
-    Let's break down the algorithm step by step. 
+    Let's break the algorithm down. 
     
 \end{frame}
 
 \begin{frame}{Learning Objective}
 
-    Ideally, we would like to learn a representation of the RG flow. 
+    Our objective is to learn a representation of the RG flow. 
 
     \vspace{1em}
 
-    Hou et al. propose to learn the C-theorem\footcite{c-theorem} monotone function. 
-
-    \vspace{1em}
-
-    Here, we will directly model the RG flow vector field, which is a function:
+    Hou et al. propose to learn the C-theorem\footcite{c-theorem} monotone function. We will directly model the RG flow vector field, which is a function:
     
     \[
     \vec{f}(J) : \mathbb{R}^n \rightarrow \mathbb{R}^n
     \]
 
     Here, $n$ is the number of parameters in the theory. 
-    For the Ising model, $n=1$. 
+    The Ising model has only one parameter, the correlation strength $J$, so $f$ is a just scalar function:
+
+    \[
+    f(J) : \mathbb{R} \rightarrow \mathbb{R}
+    \]
     
 \end{frame}
 
@@ -539,17 +545,19 @@
     \begin{columns}
         \begin{column}{.6\textwidth}
             
-            To model $f$, we will use a neural network, which are known to be powerful function approximators. 
+            To model $f$, we will use a neural network as a function approximator. 
 
-            We will call our neural network:
+            \vspace{1em}
+
+            Let our neural network be:
 
             \[
-            \vec{f}_\theta(J) : \mathbb{R}^n \rightarrow \mathbb{R}^n
+            f_\theta(J) : \mathbb{R} \rightarrow \mathbb{R}
             \]
             
         \end{column}
         \begin{column}{.4\textwidth}
-            \includegraphics[width=\textwidth]{images/ising-spins-grid.png}
+            \includegraphics[width=0.9\textwidth]{images/neural-network.png}
         \end{column}
     \end{columns}
     
@@ -557,60 +565,71 @@
 
 \begin{frame}{Deep Learning Procedure}
 
-    To adjust $\vec{f}_\theta$ so that it bests resembles $\vec{f}$, we will follow a typical supervised learning procedure:
+    To adjust $f_\theta$ so that it bests resembles $f$, we will follow a typical supervised learning procedure:
     \begin{enumerate}
         \item \textbf{Sample} values of $J$. 
-        \item \textbf{Forward Pass} to evaluate $\vec{f}_\theta(J)$. 
-        \item \textbf{Compute Error} between $\vec{f}_\theta(J)$ and $\vec{f}(J)$. 
-        \item \textbf{Backward Pass} to adjust $\vec{f}_\theta$ according to that error. 
+        \item \textbf{Forward Pass} to evaluate $f_\theta(J)$. 
+        \item \textbf{Compute Error} between $f_\theta(J)$ and $f(J)$. 
+        \item \textbf{Backward Pass} to adjust $f_\theta$ according to that error. 
     \end{enumerate}
+
+    Let go through this procedure step by step. 
 
 \end{frame}
 
-\begin{frame}{Sampling}
+\begin{frame}{Step 1: Sampling}
 
     \begin{columns}
         \begin{column}{.6\textwidth}
             
-            In general, the accuracy of neural networks improves around inputs that are sampled more. 
+            In general, the accuracy of neural networks improves wherever sampling is heaviest. 
 
             \vspace{1em}
 
-            To this end, we want to sample heavily from around values of $J$ close to interesting critical and fixed points, where flow is minimal. 
+            We are interested in fixed/critical points, where the flow goes to zero. 
 
             \vspace{1em}
 
-            This is best accomplished using an annealed Hamiltonian Monte Carlo sampler to minimize $|| \vec{f}_\theta(J) ||$. 
+            We can sample around them using an annealed Hamiltonian Monte Carlo sampler that minimizes $|| f_\theta(J) ||$. 
             
         \end{column}
         \begin{column}{.4\textwidth}
-            \includegraphics[width=\textwidth]{presentation/images/flow-heat.png}
+            \includegraphics[width=\textwidth]{images/flow-heat.png}
         \end{column}
     \end{columns}
     
 \end{frame}
 
-\begin{frame}{Forward Pass}
+\begin{frame}{Step 2: Forward Pass}
 
-    Given our initial parameters $J$ for a system, the value $\vec{f}_\theta(J)$ represents the direction the parameters will move upon renormalization. 
+    \begin{columns}
+        \begin{column}{.6\textwidth}
+            
+            Given a sample $J$ for a system, the value $f_\theta(J)$ represents the change in the correlation strength when renormalized. 
 
-    \vspace{1em}
-
-    Accordingly, $J' = J + \vec{f}_\theta(J)$ represents the renormalized parameters modelling the "zoomed out" system. 
+            \vspace{1em}
+        
+            Accordingly, $J' = J + f_\theta(J)$ is the renormalized correlation strength for the "zoomed out" system. 
+            
+        \end{column}
+        \begin{column}{.4\textwidth}
+            \includegraphics[width=\textwidth]{images/vector-steps.png}
+        \end{column}
+    \end{columns}
 
 \end{frame}
 
 \begin{frame}{Compute Error}
 
-    How can we judge whether $\vec{f}_\theta$ is sending our parameters in the right direction?
+    How can we judge whether $f_\theta$ is sending $J$ in the right direction?
 
     \vspace{1em}
 
-    Ideally, the RG flow moves the parameters such that the new, renormalized system's behavior best matches that of the original. 
+    Ideally, the behavior of the original and renormalized system should be as similar as possible. 
 
     \vspace{1em}
 
-    The behavior of Ising models is defined by the probabilistic distribution of the atomic spins, which is given by a Gibbs distribution:
+    The behavior of an Ising model is defined by the Gibbs distribution of the atomic spins:
 
     \[
     P(\sigma_0, \sigma_1, \dots, J) = \frac{1}{Z} e^{-H(\sigma_0, \sigma_1, \dots, J)}
@@ -620,15 +639,16 @@
 
 \begin{frame}{Compute Error}
 
-    Given values of $J$ and $J' = J + \vec{f}_\theta(J)$, the behavior of the original and renormalized system are modeled by:
+    Given values of $J$ and $J' = J + f_\theta(J)$, we have distributions for the original and renormalized systems. 
 
     \[
     P(\sigma_0, \sigma_1, \dots, J) 
-    \qquad \qquad \text{and} \qquad \qquad
+    \qquad \qquad \qquad
     P(\sigma_0', \sigma_1', \dots, J') 
     \]
 
-    We can then use the Kullback-Liebler divergence ($D_{KL}$) to measure the difference between these two distributions, defining our error:
+    The Kullback-Liebler (KL) divergence ($D_{KL}$) measure the distance between these two distributions. 
+    This defines our error:
 
     \[
     Error = D_{KL} \Biggr (
@@ -642,7 +662,7 @@
 
 \begin{frame}{Backward Pass}
 
-    Now that we have an error value, we can use the backpropagation algorithm to adjust $\vec{f}_\theta$ so that it does better in the future. 
+    Now that we have an error value, we can use the backpropagation algorithm to adjust $f_\theta$ so that it does better in the future. 
 
     \[
     \Delta \theta = \frac{\partial Error}{\partial \theta}
@@ -661,7 +681,7 @@
 
     \begin{center}
         \includegraphics[width=0.75\textwidth]{
-            presentation/images/a1_flows.png
+            images/a1_flows.png
         }
     \end{center}
     
@@ -670,17 +690,17 @@
 \begin{frame}{Critical Point Estimates}
 
     
-    Given the learned $f_\theta$ function, we use Newton's method to solve for fixed and critical points where $||f_\theta|| \rightarrow 0$
+    Given the learned $f_\theta$ function, we use Newton's method to numerically solve for fixed and critical points where $||f_\theta|| \rightarrow 0$
     
     \vspace{1em}
 
-    The values we get vary, due to the stocasticity of the algorithm, so we plot their distribution by sampling many runs:
+    The values vary, but we can plot their distribution by training many models:
 
     \vspace{1em}
 
     \begin{center}
         \includegraphics[width=0.75\textwidth]{
-            presentation/images/a1_critical_points_boxplot.png
+            images/a1_critical_points_boxplot.png
         }
     \end{center}
     
@@ -693,12 +713,165 @@
 
     \vspace{1em}
 
-    Hou et al. conjecture it is due to the simplicity of our treatment of the Ising model. 
+    First, let's consider possible sources of bias within our training procedure. 
+    
+\end{frame}
+
+\begin{frame}{Reducing Bias from Contrastive Approximation}
+
+    \begin{columns}
+        \begin{column}{.4\textwidth}
+            
+            One possible source of bias is the use of contrastive approximations to the KL divergence. 
+
+            \vspace{1em}
+        
+            We can refine approximation with more Gibbs sampling, but this only decreases bias up to a certain extent. 
+            
+        \end{column}
+        \begin{column}{.6\textwidth}
+            \includegraphics[width=\textwidth]{images/cd-hyperparameters.png}
+        \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}{Reducing Bias from Contrastive Approximation}
+
+    In fact, even computing the actual KL divergence doesn't reduce the bias, only serving to reduce variance:
+
+    \begin{center}
+        \includegraphics[width=\textwidth]{images/a1_critical_points_divergence_boxplot.png}
+    \end{center}
+
+\end{frame}
+
+\begin{frame}{Reducing Bias from Sampling Inefficiency}
+
+    \begin{columns}
+        \begin{column}{.4\textwidth}
+            
+            The other possible source of random bias is some inefficiency in the sampling procedure. 
+
+            \vspace{1em}
+            
+            Experimenting with a range of sampler settings shows only limited effects on the bias. 
+            
+        \end{column}
+        \begin{column}{.6\textwidth}
+            \includegraphics[width=\textwidth]{images/hmc-hyperparameters.png}
+        \end{column}
+    \end{columns}
+    
+\end{frame}
+
+\begin{frame}{Reducing Bias by Increasing Representation Complexity}
+
+    \begin{columns}
+        \begin{column}{.6\textwidth}
+
+            Hou et al. conjecture that the bias results from the simplicity of the Ising model, i.e. the blocking approximations are too coarse. 
+
+            \vspace{1em}
+            
+            To ameliorate this, they propose stacking additional spins and correlation constants, increasing the complexity and expressiveness of the Ising model. 
+
+            \vspace{1em}
+
+            This means we now need to model an $n$-dimensional flow:
+
+            \[
+            \vec{f}_\theta : \mathbb{R}^n \rightarrow \mathbb{R}^n
+            \]
+
+            
+        \end{column}
+        \begin{column}{.4\textwidth}
+            \begin{center}
+                \includegraphics[]{images/a1-edge.png}
+                \includegraphics[]{images/a1e-edge.png}
+            \end{center}
+        \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}{Reducing Bias by Increasing Representation Complexity}
+
+    \begin{columns}
+        \begin{column}{.4\textwidth}
+            
+            Using our algorithm, we model such a flow over $5$ correlation strength parameters. 
+            
+        \end{column}
+        \begin{column}{.6\textwidth}
+            \begin{center}
+                \includegraphics[width=0.7\textwidth]{images/a1e-flows.png}
+            \end{center}
+        \end{column}
+    \end{columns}
+    
+\end{frame}
+
+\begin{frame}{Reducing Bias by Increasing Representation Complexity}
+
+    The estimates of the critical points of this $5$-dimensional flow exhibit reduced bias:
+    
+    \begin{center}
+        \includegraphics[width=0.75\textwidth]{images/a1-a1e-critical-points-boxplot.png}
+    \end{center}
+
+    Hou et al. show that this trend continues as the flow dimension increases. 
+
+\end{frame}
+
+\begin{frame}{Performance Improvements from Learning the Flow}
+
+    Hou et al. ground their algorithm in field theory by learning the monotone function. 
 
     \vspace{1em}
+
+    We assert that this is not necessary, as learning the flow directly gives equally good results:
+
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{images/a1-silu-flow-monotone-estimates.png}
+    \end{center}
+
+\end{frame}
+
+\begin{frame}{Performance Improvements from Learning the Flow}
+
+    Moreover, learning the flow is significantly faster, and imposes fewer constraints on the neural network architecture\footnote{learning the monotone requires smooth nonlinearities}. 
+
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{images/a1-silu-flow-monotone-times.png}
+    \end{center}
+
+\end{frame}
+
+\begin{frame}{Conclusions}
+    The MLRG algorithm is a novel way of characterizing phase behavior using renormalization. 
+
+    \vspace{1em}
+
+    Estimates are biased, but we showed bias can be mitigated by:
+    \begin{itemize}
+        \item Tuning contrastive divergence hyperparameters
+        \item Tuning sampler hyperparameters
+        \item Increasing Ising model expressiveness as proposed by Hou et al. 
+    \end{itemize}
     
-    To ameliorate this, we can "decorate" the Ising model with additional spins that mediate different correlation strengths. 
-    
+    We also show that large performance gains can be made by directly learning the renormalization group flow, at the cost of theoretical soundness. 
+
+\end{frame}
+
+\begin{frame}{Conclusions}
+    For the future, there are many exciting avenues to explore:
+    \begin{itemize}
+        \item What other sources of bias can we identify?
+        \item How can we improve the algorithm for efficient modelling of highly expressive, high dimension lattices?
+        \item What systems beyond the Ising model can we characterize using this method?
+    \end{itemize}
 \end{frame}
 
 \end{document}

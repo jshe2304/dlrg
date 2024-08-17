@@ -1,0 +1,469 @@
+\documentclass[aspectratio=169, 12pt]{beamer}
+\usetheme{CambridgeUS}
+\usecolortheme{beaver}
+
+\usepackage{graphicx}
+\usepackage[style=authoryear]{biblatex}
+
+\addbibresource{references.bib}
+
+\title{Learning Renormalization Group Flows}
+
+\author[Jay Shen]{ 
+    Jay Shen\inst{1}
+    \and
+    Prof. Ying-Jer Kao\inst{2}
+}
+
+\institute[University of Chicago]{
+  \inst{1}
+  University of Chicago
+  \and
+  \inst{2}
+  National Taiwan University
+}
+
+\date[August 16, 2024] {
+    UCTS Final Presentation. August 16, 2024
+}
+
+%
+%
+%
+
+\AtBeginSection[]
+{
+  \begin{frame}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+%
+%
+%
+
+\begin{document}
+
+\frame{\titlepage}
+
+
+\begin{frame}
+
+    \frametitle{The Big Question}
+
+    Real Space Renormalization is a powerful, but practically difficult technique in statistical physics. 
+
+    \vspace{1em}
+
+    Can we automate it?
+    
+\end{frame}
+
+\section{What is Real Space Renormalization?}
+
+\begin{frame}
+    \frametitle{At a high level...}
+
+    Renormalization is a theory of theories. 
+
+    \begin{alertblock}{Guiding Question}
+        How does our model for a system change as we consider it from different \textbf{length scales}?
+    \end{alertblock}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example}
+
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+        Say we want to simulate a drop of water. 
+        What does this system look like?
+    
+        \begin{itemize}
+            \item $\sim10^{19}$ water molecules
+            \item $3$ atoms in each molecule
+            \item A bunch of fundamental particles in each atom
+        \end{itemize}
+    
+        What are the models we have to understand such a system?
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[scale=0.15]{images/water-droplet.jpg}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example: Smallest Scale Model}
+
+    \begin{columns}
+    \begin{column}{.6\textwidth}
+        At the particle scale, field theories:
+
+        \begin{itemize}
+            \item Incredibly complex model with many variables and physical quantities to keep track of
+            \item Practically intractable integrals to compute
+            \item Completely infeasible to simulate even a drop of water
+        \end{itemize}
+        
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=\textwidth]{images/feynman-diagram.jpg}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example: Smaller Scale Model}
+
+    \begin{columns}
+        
+    \begin{column}{.6\textwidth}
+        At the subatomic scale, quantum dynamics:
+
+        \begin{itemize}
+            \item Complex model with fewer, but still many variables and physical quantities
+            \item Difficult integrals to compute
+            \item Simulation is possible, but still intractable in general
+        \end{itemize}
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=\textwidth]{images/hydrogen-atom.jpg}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example: Small Scale Model}
+
+    \begin{columns}
+        
+    \begin{column}{.6\textwidth}
+        At the atomic scale, classical dynamics:
+
+        \begin{itemize}
+            \item Intuitive model with only a couple of degrees of freedom and parameters per molecule
+            \item Integrals are easy
+            \item Simulation is expensive, but doable for up to decently large systems
+        \end{itemize}
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=\textwidth]{images/molecular-dynamics.jpg}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+
+    \frametitle{A Toy Example: Large Scale Model}
+
+    \begin{columns}
+        
+    \begin{column}{.6\textwidth}
+        At the human scale, fluid dynamics:
+
+        \begin{itemize}
+            \item Simple, elegant theory modeled by a single PDE
+            \item A few quantities (viscosity, temperature, pressure, ...) fully specify the system
+            \item Simulation practical and accurate up to very large volumes
+        \end{itemize}
+
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=\textwidth]{images/fluid-dynamics.jpg}
+    \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Renormalization is a Theory of Scaling}
+
+    \begin{columns}
+        
+    \begin{column}{.6\textwidth}
+
+        Real Space Renormalization is a theory of how these models, all at different scales, can be linked in a highly systematic way. 
+
+        \vspace{1em}
+
+        As it turns out, such an understanding of scale is dual to an understanding of the system's fundamental thermodynamics. 
+
+    \end{column}
+    \begin{column}{.4\textwidth}
+        \includegraphics[width=\textwidth]{images/theory-flow.png}
+    \end{column}
+    \end{columns}
+    
+\end{frame}
+
+\section{Real Space Renormalization of the Ising Model}
+
+\begin{frame}
+    \frametitle{The Ising Model}
+
+    \begin{columns}
+        \begin{column}{.6\textwidth}
+            
+            Here, the specific system we will study is the Ising model for ferromagnetism:
+            \begin{itemize}
+                \item Atoms are arranged on some lattice
+                \item Atomic spins are either up or down, and are correlated to neighboring spins
+                \item The correlation has strength $J$. 
+            \end{itemize}
+            
+        \end{column}
+        \begin{column}{.4\textwidth}
+            \includegraphics[width=\textwidth]{images/ising-spins-grid.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+    
+\begin{frame}
+
+    \frametitle{The "Zoomed Out" Ising Model}
+
+    To study the Ising model at a larger scale, we "zoom out" by approximating a block of microscopic spins with a single macroscopic spin. 
+
+    \vspace{1em}
+
+    To compensate, the correlation strength $J$ will change. 
+    
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{images/ising-blocking.png}
+    \end{center}
+
+\end{frame}
+
+\begin{frame}{The Renormalization Group Flow}
+
+    We want to know exactly how $J$ responds to "zooming out". 
+
+    \vspace{1em}
+
+    That is, we would like to find a function $f(J)$, called the renormalization group (RG) flow, that describes the change in $J$ upon "zooming out". 
+
+    \vspace{1em}
+
+    Analytically solving for the Ising model's $f(J)$ is extremely hard—physicists have been trying since the 1970's. 
+
+    \vspace{1em}
+
+    Recently, Hou et al. proposed an algorithm that models $f(J)$ using machine learning. 
+    
+\end{frame}
+
+\begin{frame}{Deep Learning Procedure}
+
+    \begin{columns}
+        \begin{column}{.6\textwidth}
+            
+            The algorithm works by modeling $f(J)$ with a neural network $f_\theta(J)$. 
+
+            \vspace{1em}
+
+            We want to adjust $f_\theta(J)$ to best resemble to appropriate flow $f(J)$. 
+
+            To do so, we use a supervised learning procedure:
+            \begin{enumerate}
+                \item \textbf{Sample} values of $J$. 
+                \item \textbf{Forward Pass} to evaluate $f_\theta(J)$. 
+                \item \textbf{Estimate the Error} between $f_\theta(J)$ and $f(J)$. 
+                \item \textbf{Backward Pass} to adjust $f_\theta(J)$ according to that error. 
+            \end{enumerate}
+            
+        \end{column}
+        \begin{column}{.4\textwidth}
+            \includegraphics[width=0.9\textwidth]{images/mlrg-architecture.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\section{Results}
+
+\begin{frame}{Learned RG Flow}
+
+    
+    Following this procedure, we train a neural network $f_\theta : \mathbb{R} \rightarrow \mathbb{R}$. 
+
+    Upon convergence, $f_\theta$ exhibits the desired fixed and critical points:
+
+    \begin{center}
+        \includegraphics[width=0.75\textwidth]{
+            images/a1_flows.png
+        }
+    \end{center}
+    
+\end{frame}
+
+\begin{frame}{Critical Point Estimates}
+    
+    Given the learned $f_\theta$ function, we use Newton's method to numerically solve for fixed and critical points where $||f_\theta|| \rightarrow 0$
+    
+    \vspace{1em}
+
+    The values vary, but we can plot their distribution by training many models:
+
+    \vspace{1em}
+
+    \begin{center}
+        \includegraphics[width=0.75\textwidth]{
+            images/a1_critical_points_boxplot.png
+        }
+    \end{center}
+
+    Evidently, our estimates are biased from the analytically derived results. 
+    Why? 
+    
+\end{frame}
+
+\begin{frame}{Reducing Bias from Contrastive Approximation}
+
+    \begin{columns}
+        \begin{column}{.4\textwidth}
+            
+            One possible source of bias is the use of approximations when evaluating the error. 
+
+            \vspace{1em}
+        
+            We can refine approximations with more computation, but this only decreases bias up to a certain extent. 
+            
+        \end{column}
+        \begin{column}{.6\textwidth}
+            \includegraphics[width=\textwidth]{images/cd-hyperparameters.png}
+        \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}{Reducing Bias from Contrastive Approximation}
+
+    In fact, even computing the exact error doesn't reduce the bias, only serving to reduce variance:
+
+    \begin{center}
+        \includegraphics[width=\textwidth]{images/a1_critical_points_divergence_boxplot.png}
+    \end{center}
+
+\end{frame}
+
+\begin{frame}{Reducing Bias from Sampling Inefficiency}
+
+    \begin{columns}
+        \begin{column}{.4\textwidth}
+            
+            The other possible source of random bias is some inefficiency in the sampling procedure. 
+
+            \vspace{1em}
+            
+            Experimenting with a range of sampler settings shows only limited effects on the bias. 
+            
+        \end{column}
+        \begin{column}{.6\textwidth}
+            \includegraphics[width=\textwidth]{images/hmc-hyperparameters.png}
+        \end{column}
+    \end{columns}
+    
+\end{frame}
+
+\begin{frame}{Reducing Bias by Increasing Representation Complexity}
+
+    \begin{columns}
+        \begin{column}{.6\textwidth}
+
+            Hou et al. conjecture that the bias results from the simplicity of the Ising model, i.e. the blocking approximations are too coarse. 
+
+            \vspace{1em}
+            
+            To mitigate this, they propose stacking additional spins and correlation constants, increasing the complexity and expressiveness of the Ising model. 
+
+            \vspace{1em}
+
+            This means we need to model an $n$-dimensional flow:
+
+            \[
+            \vec{f}_\theta(\vec{J}\:) : \mathbb{R}^n \rightarrow \mathbb{R}^n
+            \]
+
+            
+        \end{column}
+        \begin{column}{.4\textwidth}
+            \begin{center}
+                \includegraphics[]{images/a1-edge.png}
+                \includegraphics[]{images/a1e-edge.png}
+            \end{center}
+        \end{column}
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}{Higher Dimensional Flows}
+
+    \begin{columns}
+        \begin{column}{.4\textwidth}
+            
+            Using the algorithm, we model a flow over $5$ correlation constants. 
+
+            \[
+            \vec{f}_\theta(\vec{J}) : \mathbb{R}^5 \rightarrow \mathbb{R}^5
+            \]
+            
+        \end{column}
+        \begin{column}{.6\textwidth}
+            \begin{center}
+                \includegraphics[width=0.7\textwidth]{images/a1e-flows.png}
+            \end{center}
+        \end{column}
+    \end{columns}
+    
+\end{frame}
+
+\begin{frame}{Reduced Bias from Increased Representation Complexity}
+
+    The estimates of the critical points of this $5$-dimensional flow exhibit reduced bias:
+    
+    \begin{center}
+        \includegraphics[width=0.75\textwidth]{images/a1-a1e-critical-points-boxplot.png}
+    \end{center}
+
+    Hou et al. show that this trend continues as the flow dimension increases. 
+
+\end{frame}
+
+\begin{frame}{Conclusions}
+
+    This algorithm presents a new, exciting way to analyze statistical systems using an automated real space renormalization approach. 
+
+    \vspace{1em}
+
+    Estimates are biased, but we show the bias can be mitigated by tuning the training procedure and increasing representational complexity. 
+
+    \vspace{1em}
+    
+    In the future, there are many exciting avenues to be explored:
+    \begin{itemize}
+        \item What other sources of bias can we identify?
+        \item How can we improve the algorithm for more efficient modeling of high-dimensional flows? 
+        \item What systems beyond square Ising models can we characterize using this method? 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Acknowledgements}
+
+    Thank you for listening!
+
+    \vspace{1em}
+
+    My gratitude goes out to Professor Kao, the NTU physics buddies, and my lab mates for their hospitality and guidance, and to Professor Chin and the generous UCTS donors for making this program possible. 
+    
+\end{frame}
+
+\end{document}
