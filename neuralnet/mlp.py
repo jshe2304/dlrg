@@ -8,15 +8,13 @@ class MLP(nn.Module):
 
         self.in_block = nn.Sequential(
             nn.Linear(in_dim, width), 
-            #nn.LayerNorm(width), 
-            nn.ReLU(), 
+            nn.SiLU(), 
         )
 
         self.mlp_block = nn.Sequential(*[
             nn.Sequential(
                 nn.Linear(width, width), 
-                #nn.LayerNorm(width), 
-                nn.ReLU()
+                nn.SiLU(), 
             ) for _ in range(hidden_depth)
         ])
 
@@ -25,12 +23,13 @@ class MLP(nn.Module):
         self.device = device
         self.to(device)
     
-    def forward(self, x):
+    def forward(self, x, sum=False):
 
         x1 = self.in_block(x)
         x2 = self.mlp_block(x1)
         x3 = self.out_block(x2)
-        
+
+        if sum: return x3.sum()
         return x3
 
 class AntisymmetricMLP(nn.Module):
