@@ -1,0 +1,99 @@
+\documentclass[%
+    reprint,
+    amsmath,amssymb,
+    aps
+]{revtex4-2}
+
+\usepackage{graphicx}
+\usepackage{bm}
+
+\begin{document}
+
+\preprint{APS/123-QED}
+
+\title{Learning Renormalization Group Flows for Lattices}
+
+\author{Jay Shen}
+\thanks{
+    My gratitude goes out to Professor Kao at NTU for his guidance, the NTU physics 
+    buddies and my group mates for their friendship and hospitality, the other UCTS 
+    fellows for their companionship, and Professor Chin and all the UCTS donors 
+    for making my summer in Taiwan possible.
+}
+\affiliation{
+    Department of Physics \\
+    University of Chicago
+}
+\email{jshe@uchicago.edu}
+
+\begin{abstract}
+
+    Real space renormalization is a powerful and theoretically fascinating, albeit 
+    difficult technique for investigating scale and phase behavior in physical systems. 
+    For even the simplest problems, formulating the so-called renormalization group 
+    (RG) flow involves incredibly tedious, intuition-dependent work that can drag 
+    on for years. 
+    However, once accurately described, RG flows have a number of uses, from 
+    describing phase behaviors to speeding up simulations. 
+    Accordingly, any information at all about their properties is highly valued
+    and sought after by physicists. 
+    Here, we review and assess a novel approach to real space renormalization 
+    initially proposed by \cite[Hou et al.][1]{}. 
+    The so-called Machine Learning Renormalization Group (MLRG) algorithm 
+    automatically determines approximate RG flows of translationally-invariant 
+    Ising models, given only the symmetry description of the lattice. 
+    It has the potential to effectively characterize a wide range of 
+    interesting systems, and also demonstrates an elegant synthesis of both new 
+    and old machine learning techniques with statistical physics. 
+    In the first section of the review, we will first give some background for real 
+    space renormalization and the Ising model. 
+    In the second section, we will describe the MLRG algorithm and demonstrate 
+    its use. 
+    In the third section, we will discuss the algorithmic design space and suggest 
+    modifications for greater efficacy and efficiency. 
+
+\end{abstract}
+
+\maketitle
+
+\section{Background}
+
+\subsection{Real Space Renormalization}
+
+Real space renormalization is a theory of scaling in physical systems. 
+That is, it asks how the apparent behavior of a system changes when considered 
+from different length scales. 
+
+Consider, as a toy example, the task of modeling some volume of water. 
+At the smallest scale, field theories form our understanding of the particulate 
+structures within atoms. 
+Zooming out and changing our scale of consideration, theories such as quantum 
+mechanics and classical mechanics provide well-developed frameworks for modeling 
+subatomic and atomic dynamics. 
+Zooming out all the way out, fluid mechanics elegantly describes 
+the hydrodynamic behaviors of human-scale systems. 
+
+Somehow, all these loosely-related theories must be related, for they 
+all model the same system. 
+Real space renormalization is a theoretical framework for systematically linking 
+these theories. 
+
+\subsection{The Ising Model}
+
+\section{The MLRG Algorithm}
+
+\subsection{Algorithm Description}
+
+\subsection{Demonstration of Results}
+
+\section{The MLRG Design Space}
+
+\subsection{Learning the Flow versus the Monotone}
+
+\subsection{RBM Hyperparameters}
+
+\subsection{Sampler Hyperparameters}
+
+\bibliography{apssamp}
+
+\end{document}
