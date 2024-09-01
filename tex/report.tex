@@ -183,13 +183,21 @@ To train $f_\theta(J)$, Hou et al. \cite{mlrg} propose the following learning pr
 
         We want our learned function $f_\theta(J)$ to be highly accurate around its zeroes, because their locations specify important thermodynamic fixed and critical points. 
         Elsewhere, it is fine if $f_\theta(J)$ is only reasonably accurate. 
-        To this end, we choose to use Hamiltonian Monte Carlo \cite{betancourt-hmc, duane-hmc} to sample from a probability distribution defined by a probability mass/potential function:
+        
+        To this end, we choose to use Hamiltonian Monte Carlo (HMC) \cite{betancourt-hmc, duane-hmc}. 
+        Using Hamiltonian dynamics, HMC samples from the unnormalized probability distribution:
         \begin{eqnarray}
-            \label{eqn:hmc-density}
-            U(J) = -\beta || f_\theta(J) ||^2
+            \label{eqn:hmc-distribution}
+            \tilde{P}(J) = e^{-U(J)}
+        \end{eqnarray}
+        Here, $U(J)$ is a potential energy function which is minimized by the samples. 
+        We set it to:
+        \begin{eqnarray}
+            \label{eqn:hmc-potential}
+            U(J) = \beta || f_\theta(J) ||^2
         \end{eqnarray}
         
-        $U(J)$ is annealed in during training by increasing $\beta$ from $\beta_0 = 0$ to some $\beta_T > 0$ according to a schedule. 
+        $U(J)$ is annealed in during training by increasing $\beta$ from $\beta_0 = 0$ to a $\beta_T > 0$ according to some schedule. 
         This ensures the sampling is more or less random at the beginning of training, and we can get a general idea of the function shape. 
         Later on, as the full value of $U(J)$ kicks in, the sampler begins to sample heavily only around the points of interest, thus refining their values. 
     }\\
