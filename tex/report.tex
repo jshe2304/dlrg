@@ -27,13 +27,13 @@
 \begin{abstract}
 
     Real space renormalization is a powerful and theoretically fascinating, albeit 
-    difficult technique for investigating scale and phase behavior in physical systems. For even the simplest problems, formulating the so-called renormalization group (RG) flow involves incredibly tedious, intuition-dependent work that can drag on for years. However, once accurately described, RG flows have a number of uses, from describing phase behaviors to speeding up simulations. Accordingly, any information at all about their properties is highly valued and sought after by physicists. In this work, we review and assess a novel approach to real space renormalization initially proposed by Hou et al. \cite{mlrg}. The so-called Machine Learning Renormalization Group (MLRG) algorithm automatically determines approximate RG flows of translationally-invariant Ising models, given only the symmetry description of the lattice. It has the potential to effectively characterize a wide range of interesting systems, and also demonstrates an elegant synthesis of both new and old machine learning techniques with statistical physics. In the first section of the review, we will first give some background for real space renormalization and the Ising model. In the second section, we will describe the MLRG algorithm and demonstrate its use. In the third section, we will discuss the algorithmic design space and suggest modifications for greater efficacy and efficiency. 
+    difficult technique for investigating scale and phase behavior in physical systems. For even the simplest problems, formulating the so-called renormalization group (RG) flow involves incredibly tedious, intuition-dependent work that can drag on for years. However, once accurately described, RG flows have a number of uses, from describing phase behaviors to speeding up simulations. Accordingly, any information at all about their properties is highly valued and sought after by physicists. In this work, we review and assess a novel approach to real space renormalization initially proposed by Hou et al. \cite{mlrg}. The so-called Machine Learning Renormalization Group (MLRG) algorithm automatically determines approximate RG flows of translationally-invariant Ising models, given only the symmetry description of the lattice. It has the potential to effectively characterize a wide range of interesting systems, and also demonstrates an elegant synthesis of both new and old machine learning techniques with statistical physics. In the Section \ref{sec:background}, we will first give some background for real space renormalization and the Ising model. In Section \ref{sec:mlrg}, we will describe the MLRG algorithm and demonstrate its use. In Section \ref{sec:design-space}, we will discuss the algorithmic design space and explore modifications for improvement. 
 
 \end{abstract}
 
 \maketitle
 
-\section{Background}
+\section{Background} \label{sec:background}
 
 \subsection{The Gist of Real Space Renormalization}
 
@@ -129,7 +129,7 @@ It turns out that the asymptotic behaviors of this function correspond directly 
 Formulating this function across all values of $J$, is extremely difficult, however. 
 We will now describe an algorithm that learns it automatically. 
 
-\section{The MLRG Algorithm}
+\section{The MLRG Algorithm} \label{sec:mlrg}
 
 \subsection{Algorithm Description}
 
@@ -442,7 +442,7 @@ We conclude that:
 
 \section{Conclusion}
 
-In this review, we introduced the concept of real-space renormalization, presented the Ising model problem, and demonstrated how to apply real-space renormalization to it.
+In this work, we introduced the concept of real-space renormalization, presented the Ising model problem, and demonstrated how to apply real-space renormalization to it.
 We then described a neural learning algorithm to approximate the renormalization group flow function over a Lieb lattice Ising model. 
 We demonstrated its success at learning an accurate approximation, and observed its predictive abilities for critical points. 
 We then discussed some aspects of the algorithmic design space, notably the reduction of bias via higher-dimensional representations, as well as the choice of loss function, whether to learn the flow or the monotone, and the role of sampler and contrastive divergence hyperparameters. 
