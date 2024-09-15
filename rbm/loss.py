@@ -11,7 +11,7 @@ def contrastive_divergence(fine, coarse, batch_size=1, k_fine=4, k_coarse=1):
     '''
     
     # Sample from target distribution
-    p_x = fine.p_v(n=batch_size, k=k_fine).detach()
+    p_x = fine.p_v(n=batch_size, k=k_fine)
     x = p_x.bernoulli() * 2 - 1
 
     # Sample from model distribution
